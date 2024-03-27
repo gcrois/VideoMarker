@@ -1,0 +1,212 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Roboto', sans-serif;
+    height: 100vh;
+    > div {
+        height: 100%;
+    }
+    overflow: hidden;
+}
+
+* {
+    min-width: 0;
+    min-height: 0;
+}
+
+.timeline-container {
+    // span both columns
+    grid-column: 1 / span 2;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    height: 50px !important;
+}
+
+.timeline-bar {
+    background-color: red;
+    height: 10px;
+    width: 90%;
+    position: relative;
+    overflow: visible;
+}
+
+.timeline-marker {
+    position: absolute;
+    margin-top: -10px;
+    background-color: green;
+    height: 32px;
+    width: 2px;
+    z-index: 10;
+
+    &.timeline-progress {
+        z-index: 20;
+        background-color: rgba(0, 0, 0, 0.001);
+        width: 8px;
+        border: 1px solid white;
+    }
+
+    &.highlight {
+        height: 40px;
+        margin-top: -16px;
+        background-color: rgb(30, 255, 0);
+    }
+}
+
+.main-divider {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    height: 100%;
+    gap: 10px;
+
+    > div {
+        height: 100%;
+        display: flex;
+        background-color: rgba(0, 0, 0, 0.1);
+        border-radius: 16px;
+        box-sizing: border-box;
+    }
+
+    > .video-col {
+        display: grid;
+        grid-template-rows: 1fr 64px 1fr;
+        > div {
+            margin: 10px;
+            background-color: rgba(0, 0, 0, 0.1)
+        }
+    }
+}
+
+.cur-time {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: row;
+    text-align: center;
+}
+
+.time-adj {
+    width: 300px;
+    display: grid;
+    // everything centered
+    justify-content: center;
+    align-items: center;
+    grid-template-columns: 1fr 200px 1fr;
+    font-size: 30px;
+}
+
+.vtt-disp {
+    overflow: auto;
+}
+
+.vtt-cue {
+    margin: 4px;
+
+    display: grid;
+
+    grid-template-columns: 80px 1fr;
+
+    &.highlight {
+        > .vtt-start {
+            background-color: rgba(118, 154, 233, 0.6);
+            border-radius: 8px 0 0 8px;
+        }
+    
+        > .vtt-text {
+            background-color: rgba(0, 0, 0, 0.4);
+            border-radius: 0 8px 8px 0;
+        }
+    }
+
+    &:hover {
+        // background-color: rgba(0, 0, 0, 0.1);
+        > .vtt-start {
+            background-color: rgba(255, 130, 58, 0.6);
+            border-radius: 8px 0 0 8px;
+        }
+    
+        > .vtt-text {
+            background-color: rgba(0, 0, 0, 0.4);
+            border-radius: 0 8px 8px 0;
+        }
+    }
+
+    > div {
+        padding: 4px;
+    }
+
+    > .vtt-start {
+        background-color: rgba(255, 255, 255, 0.5);
+        border-radius: 8px 0 0 8px;
+    }
+
+    > .vtt-text {
+        background-color: rgba(0, 0, 0, 0.1);
+        border-radius: 0 8px 8px 0;
+    }
+}
+
+.notes-col {
+    overflow: auto;
+    display: block !important;
+}
+
+.note-container {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    width: 100%;
+    padding: 10px;
+
+    // border box
+    box-sizing: border-box;
+
+    > div {
+        padding: 4px;
+    }
+
+    > .note-time {
+        background-color: rgba(255, 255, 255, 0.5);
+        border-radius: 8px 0 0 8px;
+    }
+
+    > .note-content {
+        background-color: rgba(0, 0, 0, 0.1);
+        border-radius: 0 8px 8px 0;
+
+        // unset all textarea props
+        resize: none;
+        border: none;
+        outline: none;
+        font-family: inherit;
+
+        min-height: 100%;
+    }
+
+    &.highlight {
+        > .note-time {
+            background-color: rgba(118, 154, 233, 0.6);
+            border-radius: 8px 0 0 8px;
+        }
+    
+        > .note-content {
+            background-color: rgba(0, 0, 0, 0.4);
+            border-radius: 0 8px 8px 0;
+        }
+    }
+
+    &.spawner {
+        > .note-time {
+            background-color: rgba(58, 94, 255, 0.6);
+            border-radius: 8px 0 0 8px;
+        }
+    
+        > .note-content {
+            background-color: rgba(0, 0, 0, 0.4);
+            border-radius: 0 8px 8px 0;
+        }
+    }
+}
