@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import ReactPlayer from 'react-player'
+import 'flexlayout-react/style/dark.css';
 import './App.scss'
 import React, { useEffect } from 'react'
 
@@ -13,6 +14,64 @@ import TextareaAutosize from 'react-textarea-autosize';
 import { WebVTTParser } from 'webvtt-parser';
 
 import { v4 as uuidv4 } from 'uuid';
+
+import { Layout, Model, TabNode, IJsonModel } from 'flexlayout-react';
+
+import { Player, Timeline } from './Components/Player'
+
+const json : IJsonModel = {
+    global: {
+        "tabEnableFloat": true,
+    },
+    borders: [],
+    layout: {
+        type: "row",
+        weight: 100,
+        children: [
+            {
+                type: "tabset",
+                weight: 50,
+                children: [
+                    {
+                        type: "tab",
+                        name: "One",
+                        component: "markerlist",
+                    }
+                ]
+            },
+            {
+                type: "tabset",
+                weight: 50,
+                children: [
+                    {
+                        type: "tab",
+                        name: "Two",
+                        component: "video",
+                    }
+                ]
+            },
+            {
+                type: "row",
+                weight: 100,
+                children: [
+                    {
+                        type: "tabset",
+                        weight: 100,
+                        children: [
+                            {
+                                type: "tab",
+                                name: "Three",
+                                component: "timeline",
+                            }
+                        ]
+                    },
+                ]
+            }
+        ]
+    }
+};
+
+const model = Model.fromJson(json)
 
 const parser = new WebVTTParser();
 
@@ -85,7 +144,7 @@ function getVTT(p_id: string): Promise<Cue[]> {
     });
 }
 
-function dispSeconds(seconds: number) {
+export function dispSeconds(seconds: number) {
     // convert seconds to hh:mm:ss.s
     const hours = Math.floor(seconds / 3600)
     // pad to 2 digits
@@ -98,6 +157,8 @@ function dispSeconds(seconds: number) {
 
 const ls: { [key: string]: string } = {}
 function checkLocalStorage(p_id: string) {
+    // if localStorage doesn't exist, create it
+    localStorage.setItem('test', 'test')
     if (p_id in ls) {
         return ls[p_id]
     }
@@ -114,15 +175,21 @@ function checkLocalStorage(p_id: string) {
 }
 
 // context for state of the player
-const PlayerContext = React.createContext({
+export const PlayerContext = React.createContext({
     setSetTime: (time: number) => {},
+    setTime: 0,
     curTime: 0,
+    setCurTime: (time: number) => {},
     maxTime: 0,
+    setMaxTime: (time: number) => {},
     curAnnotation: '',
     setCurAnnotation: (note_id: string) => { },
+    annotations: [] as NoteProps[],
     addAnnotation: (props: Omit<NoteProps, 'note_id'>) => { },
     editAnnotation: (props: Partial<NoteProps> & {note_id: string}) => { },
     deleteAnnotation: (note_id: string) => { },
+    playerState: 'uninit' as 'uninit' | 'init' | 'ready',
+    setPlayerState: (state: 'uninit' | 'init' | 'ready') => {},
 })
 
 function App() {
@@ -136,8 +203,6 @@ function App() {
     }
 
     if (!p_id) throw new Error('p_id is required')
-
-    const playerRef = React.useRef<ReactPlayer>(null)
 
     const ls = checkLocalStorage(p_id)
     const [curTime, setCurTime] = React.useState(ls.curTime)
@@ -199,22 +264,6 @@ function App() {
     }, [p_id]);
 
     useEffect(() => {
-        setCurTime(setTime)
-        if (playerRef.current) {
-            playerRef.current.seekTo(setTime)
-        } else {
-            console.error('playerRef.current is null')
-        }
-    }, [setTime])
-
-    useEffect(() => {
-        setTimeout(() => {
-            console.log('seeking to curTime', curTime)
-            playerRef.current?.seekTo(curTime)
-        });
-    }, [playerRef])
-
-    useEffect(() => {
         // highlight the current cue
         const cue = vttContent.find(cue => cue.startTime <= curTime && curTime <= cue.endTime)
         if (cue) {
@@ -238,24 +287,106 @@ function App() {
         scrollToCue(curCue)
     }, [curCue])
 
-    const pbar_bind = useDrag(({ xy: [x] }) => {
-        const pbar = document.querySelector('.timeline-bar')
-        if (pbar) {
-            const rect = pbar.getBoundingClientRect()
-            const time = (x - rect.left) / rect.width * maxTime
+    const NotesList = () => {
+        return (<div className='notes-col'>
+        {[...annotations, { note: '', start: curTime, note_id: 'spawner', spawner: true }]
+            .sort((a, b) => a.start - b.start)
+            .map((note, i) => {
+            return (
+                <Note key={i} {...note} />
+            )
+        })}
+    </div>)
+    }
 
-            setPlayerState("init")
-            setSetTime(time)
-            setCurTime(time)
+    // const Player = () => {
+    //     return (<div className='video-col'>
+    //         <div>
+    //             <ReactPlayer
+    //                 id='player'
+    //                 ref={playerRef}
+    //                 url={`/Recordings/P${p_id}/P${p_id}.mp4`}
+    //                 width='100%'
+    //                 height='100%'
+    //                 progressInterval={100}
+    //                 controls={true}
+        
+    //                 onReady={() => {
+    //                     if (playerState === "uninit") {
+    //                         playerRef.current?.seekTo(curTime)
+    //                         setMaxTime(playerRef.current?.getDuration() || 0)
+    //                         setPlayerState("init")
+    //                     }
+    //                 }}
+        
+    //                 onProgress={(state) => {
+    //                     if (playerState === "init") {
+    //                         setMaxTime(playerRef.current?.getDuration() || 0)
+    //                         setPlayerState("ready")
+    //                     }
+    //                     else {
+    //                         if (playerRef.current?.getInternalPlayer()?.paused) {
+    //                             return
+    //                         }
+    //                         setCurTime(state.playedSeconds)
+    //                     }
+    //                 }}
+    //             />
+    //         </div>
+    //         <div className='cur-time'>
+    //             <div className='time-adj'>
+    //                 <div onClick={() => setSetTime(curTime - 10)}><IoPlayBack/></div>
+    //                 <div>{dispSeconds(curTime)}</div>
+    //                 <div onClick={() => setSetTime(curTime + 10)}><IoPlayForward/></div>
+    //             </div>
+    //         </div>
+    //         <div className='vtt-disp'>
+    //             {
+    //                 vttContent.map((cue, i) => {
+    //                     return (
+    //                         <div
+    //                             key={i}
+    //                             className={'vtt-cue ' + (curCue === cue.id ? 'highlight' : '')}
+    //                             id={`cue-${cue.id}`}
+    //                             onClick={()=>{
+    //                                 setSetTime(cue.startTime + 0.1)
+    //                             }}
+    //                         >
+    //                             <div className='vtt-start'>{dispSeconds(cue.startTime)}</div>
+    //                             <div className='vtt-text'>{cue.text}</div>
+    //                         </div>
+    //                     )
+    //                 })
+    //             }
+    //         </div>
+    //     </div>
+    //     )
+    // }
+
+    const factory = (node: TabNode) => {
+        const component = node.getComponent() as string
+        switch (component) {
+            case 'markerlist':
+                return <NotesList />
+            case 'video':
+                return <Player p_id={p_id} />
+            case 'timeline':
+                return <Timeline />
+            default:
+                return <div>Unknown component: {component}</div>
         }
-    })
+    }
 
     return (
         <>
             <PlayerContext.Provider value={{
                 curTime,
+                setCurTime,
                 maxTime,
+                setMaxTime,
+                setTime,
                 setSetTime,
+                annotations,
                 curAnnotation,
                 setCurAnnotation,
                 addAnnotation: (props: Omit<NoteProps, 'note_id'>) => {
@@ -274,100 +405,20 @@ function App() {
                 deleteAnnotation: (note_id: string) => {
                     const newAnnotations = annotations.filter(annotation => annotation.note_id !== note_id)
                     setAnnotations(newAnnotations)
-                }
+                },
+                playerState,
+                setPlayerState
             }}>
-                <div className='main-divider'>
-                    <div className='notes-col'>
-                        {[...annotations, { note: '', start: curTime, note_id: 'spawner', spawner: true }]
-                            .sort((a, b) => a.start - b.start)
-                            .map((note, i) => {
-                            return (
-                                <Note key={i} {...note} />
-                            )
-                        })}
-                    </div>
-                    <div className='video-col'>
-                        <div>
-                            <ReactPlayer
-                                ref={playerRef}
-                                url={`/Recordings/P${p_id}/P${p_id}.mp4`}
-                                width='100%'
-                                height='100%'
-                                progressInterval={100}
-                                controls={true}
-
-                                onReady={() => {
-                                    if (playerState === "uninit") {
-                                        playerRef.current?.seekTo(curTime)
-                                        setMaxTime(playerRef.current?.getDuration() || 0)
-                                        setPlayerState("init")
-                                    }
-                                }}
-
-                                onProgress={(state) => {
-                                    if (playerState === "init") {
-                                        setMaxTime(playerRef.current?.getDuration() || 0)
-                                        setPlayerState("ready")
-                                    }
-                                    else {
-                                        if (playerRef.current?.getInternalPlayer()?.paused) {
-                                            return
-                                        }
-                                        setCurTime(state.playedSeconds)
-                                    }
-                                }}
-                            />
-                        </div>
-                        <div className='cur-time'>
-                            <div className='time-adj'>
-                                <div onClick={() => setSetTime(curTime - 10)}><IoPlayBack/></div>
-                                <div>{dispSeconds(curTime)}</div>
-                                <div onClick={() => setSetTime(curTime + 10)}><IoPlayForward/></div>
-                            </div>
-                        </div>
-                        <div className='vtt-disp'>
-                            {
-                                vttContent.map((cue, i) => {
-                                    return (
-                                        <div
-                                            key={i}
-                                            className={'vtt-cue ' + (curCue === cue.id ? 'highlight' : '')}
-                                            id={`cue-${cue.id}`}
-                                            onClick={()=>{
-                                                setSetTime(cue.startTime + 0.1)
-                                            }}
-                                        >
-                                            <div className='vtt-start'>{dispSeconds(cue.startTime)}</div>
-                                            <div className='vtt-text'>{cue.text}</div>
-                                        </div>
-                                    )
-                                })
-                            }
-                        </div>
-                    </div>
-                    <div className='timeline-container'>
-                        <div
-                            className='timeline-bar'
-                        >
-                            <div
-                                {...pbar_bind()}
-                                className='timeline-marker timeline-progress'
-                                style={{ left: curTime / maxTime * 100 + '%' }}
-                            />
-                            {
-                                annotations.map((note, i) => {
-                                    return <NoteMarker key={i} {...note} />
-                                })
-                            }
-                        </div>
-                    </div>
-                </div>
+                <Layout
+                    model={model}
+                    factory={factory}
+                />
             </PlayerContext.Provider>
         </>
     )
 }
 
-interface NoteProps {
+export interface NoteProps {
     note: string
     start: number
     end?: number
@@ -432,21 +483,6 @@ function Note(props: NoteProps) {
                 }
             />
         </div>
-    )
-}
-
-function NoteMarker(props: NoteProps) {
-    const context = React.useContext(PlayerContext)
-
-    return (
-        <div
-            className={`timeline-marker ${context.curAnnotation === props.note_id ? 'highlight' : ''}`}
-            style={{
-                left: props.start / context.maxTime * 100 + '%',
-            }}
-            onMouseOver={() => context.setCurAnnotation(props.note_id)}
-            onMouseLeave={() => context.setCurAnnotation('')}
-        />
     )
 }
 
