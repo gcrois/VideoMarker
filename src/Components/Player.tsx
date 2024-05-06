@@ -1,6 +1,6 @@
 import ReactPlayer from "react-player"
 import { dispSeconds, NoteProps, PlayerContext } from "../App"
-import { useContext, useRef, useState } from "react"
+import { useContext, useEffect, useRef, useState } from "react"
 import { useDrag } from "@use-gesture/react"
 import { IoPlayBack, IoPlayForward } from "react-icons/io5"
 
@@ -9,11 +9,27 @@ interface PlayerProps {
 }
 
 export const Player = (props: PlayerProps) => {
-    const { curTime, setCurTime, setMaxTime, setSetTime } = useContext(PlayerContext)
+    const { curTime, setCurTime, setMaxTime, setSetTime, setTime } = useContext(PlayerContext)
 
     const [playerState, setPlayerState] = useState("uninit")
 
     const playerRef = useRef<ReactPlayer>(null)
+
+    useEffect(() => {
+        setCurTime(setTime)
+        if (playerRef.current) {
+            playerRef.current.seekTo(setTime)
+        } else {
+            console.error('playerRef.current is null')
+        }
+    }, [setTime])
+
+    useEffect(() => {
+        setTimeout(() => {
+            console.log('seeking to curTime', curTime)
+            playerRef.current?.seekTo(curTime)
+        });
+    }, [playerRef])
     
     return <div><ReactPlayer
     id='player'
