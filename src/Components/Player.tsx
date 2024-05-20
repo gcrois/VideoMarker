@@ -35,7 +35,7 @@ export const Player = (props: PlayerProps) => {
     return <div className="player"><ReactPlayer
     id='player'
     ref={playerRef}
-    url={`/Recordings/P${props.p_id}/P${props.p_id}.mp4`}
+    url={`https://www.youtube.com/watch?v=P4OGGY14uKI`}
     width='100%'
     height='100%'
     progressInterval={100}

@@ -13,6 +13,8 @@ import { Layout, Model, TabNode, IJsonModel } from 'flexlayout-react';
 import { Player, Timeline } from './Components/Player'
 import { NoteList, NoteProps } from './Components/Notes';
 
+import pilotTranscript from './assets/pilot.vtt?raw';
+
 const json: IJsonModel = {
     global: {
         "tabEnableFloat": true,
@@ -149,11 +151,16 @@ interface Cue {
 }
 
 function getVTT(p_id: string): Promise<Cue[]> {
-    return fetch(`/Recordings/P${p_id}/transcript.vtt`).then(response => {
-        return response.text().then(vttContent => {
-            return parser.parse(vttContent).cues
-        })
-    });
+    // return as already resolved promise
+    return new Promise((resolve) => {
+        console.log('pilotTranscript', pilotTranscript)
+        resolve(parser.parse(pilotTranscript).cues)
+    })
+    // return fetch(`/Recordings/P${p_id}/transcript.vtt`).then(response => {
+    //     return response.text().then(vttContent => {
+    //         return parser.parse(vttContent).cues
+    //     })
+    // });
 }
 
 export function dispSeconds(seconds: number) {
@@ -169,21 +176,23 @@ export function dispSeconds(seconds: number) {
 
 const ls: { [key: string]: string } = {}
 function checkLocalStorage(p_id: string) {
-    // if localStorage doesn't exist, create it
-    localStorage.setItem('test', 'test')
-    if (p_id in ls) {
-        return ls[p_id]
-    }
-    else {
-        // check for p_id localStorage
-        const p_id_local = localStorage.getItem(p_id)
-        if (p_id_local) {
-            console.log('p_id_local', p_id_local)
-            ls[p_id] = JSON.parse(p_id_local)
-            return JSON.parse(p_id_local)
-        }
-        return { curTime: 0, annotations: [] }
-    }
+    return { curTime: 0, annotations: [] }
+
+    // // if localStorage doesn't exist, create it
+    // localStorage.setItem('test', 'test')
+    // if (p_id in ls) {
+    //     return ls[p_id]
+    // }
+    // else {
+    //     // check for p_id localStorage
+    //     const p_id_local = localStorage.getItem(p_id)
+    //     if (p_id_local) {
+    //         console.log('p_id_local', p_id_local)
+    //         ls[p_id] = JSON.parse(p_id_local)
+    //         return JSON.parse(p_id_local)
+    //     }
+    //     return { curTime: 0, annotations: [] }
+    // }
 }
 
 // context for state of the player
@@ -210,12 +219,12 @@ export const PlayerContext = React.createContext({
 function App() {
     // get url parameters
     const urlParams = new URLSearchParams(window.location.search)
-    let p_id = urlParams.get('p')
+    const p_id = "pilot";//urlParams.get('p')
     
-    // if left pad to 2 digits with 0
-    if (p_id && p_id.length === 1) {
-        p_id = `0${p_id}`
-    }
+    // // if left pad to 2 digits with 0
+    // if (p_id && p_id.length === 1) {
+    //     p_id = `0${p_id}`
+    // }
     
     if (!p_id) throw new Error('p_id is required')
         
@@ -439,4 +448,4 @@ async function getAnnotations(p_id: string) {
     return response.json();
 }
 
-export default App
+export default App;
