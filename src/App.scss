@@ -145,14 +145,73 @@ html, body {
     }
 
     > .vtt-text {
-        background-color: rgba(0, 0, 0, 0.1);
+        background-color: rgba(255, 255, 255, 0.1);
         border-radius: 0 8px 8px 0;
     }
 }
 
-.notes-col {
+.notes-list {
     overflow: auto;
     display: block !important;
+    flex-grow: 1;
+}
+
+.event-type {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    padding: 4px;
+}
+
+.event-select {
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    min-height: fit-content;
+    gap: 4px;
+    
+    > div {
+        padding: 4px;
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+    }
+}
+
+.event-modifiers {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    padding: 4px;
+}
+
+.event-boundary {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    padding: 4px;
+    > * {
+        padding: 8px;
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+    }
+}
+
+.divider {
+    background-color: rgba(255, 255, 255, 0.3);
+    height: 100%;
+    width: 8px;
+}
+
+.notes-col {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    overflow-y: hidden;
 }
 
 .note-container {
@@ -171,10 +230,11 @@ html, body {
     > .note-time {
         background-color: rgba(255, 255, 255, 0.5);
         border-radius: 8px 0 0 8px;
+        cursor: pointer;
     }
 
     > .note-content {
-        background-color: rgba(0, 0, 0, 0.1);
+        background-color: rgba(255, 255, 255, 0.1);
         border-radius: 0 8px 8px 0;
 
         // unset all textarea props
@@ -193,7 +253,7 @@ html, body {
         }
     
         > .note-content {
-            background-color: rgba(0, 0, 0, 0.4);
+            background-color: rgba(255, 255, 255, 0.3);
             border-radius: 0 8px 8px 0;
         }
     }
@@ -205,8 +265,16 @@ html, body {
         }
     
         > .note-content {
-            background-color: rgba(0, 0, 0, 0.4);
+            background-color: rgba(255, 255, 255, 0.3);
             border-radius: 0 8px 8px 0;
         }
     }
+}
+
+.player {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    overflow-y: hidden;
 }

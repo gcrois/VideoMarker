@@ -1,8 +1,9 @@
 import ReactPlayer from "react-player"
-import { dispSeconds, NoteProps, PlayerContext } from "../App"
+import { dispSeconds, PlayerContext } from "../App"
 import { useContext, useEffect, useRef, useState } from "react"
 import { useDrag } from "@use-gesture/react"
 import { IoPlayBack, IoPlayForward } from "react-icons/io5"
+import { NoteProps } from "./Notes"
 
 interface PlayerProps {
     p_id: string
@@ -31,7 +32,7 @@ export const Player = (props: PlayerProps) => {
         });
     }, [playerRef])
     
-    return <div><ReactPlayer
+    return <div className="player"><ReactPlayer
     id='player'
     ref={playerRef}
     url={`/Recordings/P${props.p_id}/P${props.p_id}.mp4`}

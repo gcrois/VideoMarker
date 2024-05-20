@@ -1,14 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import ReactPlayer from 'react-player'
 import 'flexlayout-react/style/dark.css';
 import './App.scss'
 import React, { useEffect } from 'react'
-
-import { IoPlayBack, IoPlayForward } from "react-icons/io5";
-
-import { useDrag } from '@use-gesture/react';
-
-import TextareaAutosize from 'react-textarea-autosize';
 
 // @ts-expect-error - no types
 import { WebVTTParser } from 'webvtt-parser';
@@ -18,6 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Layout, Model, TabNode, IJsonModel } from 'flexlayout-react';
 
 import { Player, Timeline } from './Components/Player'
+import { NoteList, NoteProps } from './Components/Notes';
 
 const json: IJsonModel = {
     global: {
@@ -26,40 +20,45 @@ const json: IJsonModel = {
     borders: [],
     layout: {
         "type": "row",
-        "id": "#32fa37bb-915f-4cee-bf38-96f999d78577",
         "children": [
             {
                 "type": "row",
-                "id": "#2925f6e2-3add-43eb-8299-15528364c602",
                 "weight": 50,
                 "children": [
                     {
                         "type": "row",
-                        "id": "#3ec42e97-765f-41b6-84f9-ae289ae8dfb7",
                         "weight": 87.8132118451025,
                         "children": [
                             {
                                 "type": "tabset",
-                                "id": "#75b88ded-c24e-4767-bbb8-65b02812b076",
                                 "weight": 50,
                                 "children": [
                                     {
                                         "type": "tab",
-                                        "id": "#a3f0ffb9-9a9d-4480-86ab-2cb2db5d8c7a",
-                                        "name": "Two",
+                                        "name": "Video",
                                         "component": "video"
                                     }
                                 ]
                             },
                             {
                                 "type": "tabset",
-                                "id": "#428ad410-7d99-49d9-b749-377fe3deb18e",
                                 "weight": 50,
                                 "children": [
                                     {
                                         "type": "tab",
-                                        "id": "#ee2001d1-6ac3-4aa5-8f30-e898c1f4304b",
-                                        "name": "One",
+                                        "name": "Markers",
+                                        "component": "vtt"
+                                    }
+                                ],
+                                "active": true
+                            },
+                            {
+                                "type": "tabset",
+                                "weight": 50,
+                                "children": [
+                                    {
+                                        "type": "tab",
+                                        "name": "Markers",
                                         "component": "markerlist"
                                     }
                                 ],
@@ -69,13 +68,11 @@ const json: IJsonModel = {
                     },
                     {
                         "type": "tabset",
-                        "id": "#666fea95-d97b-456c-b4d9-d87759bf8ead",
                         "weight": 12.186788154897494,
                         "children": [
                             {
                                 "type": "tab",
-                                "id": "#272f41bb-4d7c-4a72-a48d-0043db5da5c1",
-                                "name": "Three",
+                                "name": "Timeline",
                                 "component": "timeline"
                             }
                         ]
@@ -205,6 +202,9 @@ export const PlayerContext = React.createContext({
     deleteAnnotation: (note_id: string) => { },
     playerState: 'uninit' as 'uninit' | 'init' | 'ready',
     setPlayerState: (state: 'uninit' | 'init' | 'ready') => {},
+    vttContent: [] as Cue[],
+    curCue: '',
+    setCurCue: (id: string) => {}
 })
 
 function App() {
@@ -288,7 +288,6 @@ function App() {
         if (noteSpawner) {
             noteSpawner.scrollIntoView({ behavior: 'smooth' })
         }
-        // console.log('curTime', curTime)
     }, [curTime])
     
     function scrollToCue(id: string) {
@@ -302,91 +301,30 @@ function App() {
         scrollToCue(curCue)
     }, [curCue])
     
-    const NotesList = () => {
-        return (<div className='notes-col'>
-        {[...annotations, { note: '', start: curTime, note_id: 'spawner', spawner: true }]
-        .sort((a, b) => a.start - b.start)
-        .map((note, i) => {
-            return (
-                <Note key={i} {...note} />
-            )
-        })}
-        </div>)
-    }
-    
-    // const Player = () => {
-    //     return (<div className='video-col'>
-    //         <div>
-    //             <ReactPlayer
-    //                 id='player'
-    //                 ref={playerRef}
-    //                 url={`/Recordings/P${p_id}/P${p_id}.mp4`}
-    //                 width='100%'
-    //                 height='100%'
-    //                 progressInterval={100}
-    //                 controls={true}
-    
-    //                 onReady={() => {
-    //                     if (playerState === "uninit") {
-    //                         playerRef.current?.seekTo(curTime)
-    //                         setMaxTime(playerRef.current?.getDuration() || 0)
-    //                         setPlayerState("init")
-    //                     }
-    //                 }}
-    
-    //                 onProgress={(state) => {
-    //                     if (playerState === "init") {
-    //                         setMaxTime(playerRef.current?.getDuration() || 0)
-    //                         setPlayerState("ready")
-    //                     }
-    //                     else {
-    //                         if (playerRef.current?.getInternalPlayer()?.paused) {
-    //                             return
-    //                         }
-    //                         setCurTime(state.playedSeconds)
-    //                     }
-    //                 }}
-    //             />
-    //         </div>
-    //         <div className='cur-time'>
-    //             <div className='time-adj'>
-    //                 <div onClick={() => setSetTime(curTime - 10)}><IoPlayBack/></div>
-    //                 <div>{dispSeconds(curTime)}</div>
-    //                 <div onClick={() => setSetTime(curTime + 10)}><IoPlayForward/></div>
-    //             </div>
-    //         </div>
-    //         <div className='vtt-disp'>
-    //             {
-    //                 vttContent.map((cue, i) => {
-    //                     return (
-    //                         <div
-    //                             key={i}
-    //                             className={'vtt-cue ' + (curCue === cue.id ? 'highlight' : '')}
-    //                             id={`cue-${cue.id}`}
-    //                             onClick={()=>{
-    //                                 setSetTime(cue.startTime + 0.1)
-    //                             }}
-    //                         >
-    //                             <div className='vtt-start'>{dispSeconds(cue.startTime)}</div>
-    //                             <div className='vtt-text'>{cue.text}</div>
-    //                         </div>
-    //                     )
-    //                 })
-    //             }
-    //         </div>
+    // const NotesList = React.memo(() => {
+    //     return (<div className='notes-col'>
+    //     {[...annotations, { note: '', start: curTime, note_id: 'spawner', spawner: true }]
+    //     .sort((a, b) => a.start - b.start)
+    //     .map((note, i) => {
+    //         return (
+    //             <MemoNote key={i} {...note} />
+    //         )
+    //     })}
     //     </div>
-    //     )
-    // }
+    // )
+    // })
     
     const factory = (node: TabNode) => {
         const component = node.getComponent() as string
         switch (component) {
             case 'markerlist':
-            return <NotesList />
+            return <NoteList annotations={annotations} />
             case 'video':
             return <Player p_id={p_id} />
             case 'timeline':
             return <Timeline />
+            case 'vtt':
+            return <VttDisplay vttContent={vttContent} />
             default:
             return <div>Unknown component: {component}</div>
         }
@@ -424,90 +362,54 @@ function App() {
                 setAnnotations(newAnnotations)
             },
             playerState,
-            setPlayerState
+            setPlayerState,
+            vttContent,
+            curCue,
+            setCurCue
         }}>
-        <Layout
-        model={model}
-        factory={factory}
-        ref={layoutRef}
-        onModelChange={
-            (model) => {
-                console.log('model change', model.toJson())
-            }
-        }
-        />
+            <Layout
+                model={model}
+                factory={factory}
+                ref={layoutRef}
+                onModelChange={
+                    (model) => {
+                        console.log('model change', model.toJson())
+                    }
+                }
+            />
         </PlayerContext.Provider>
         </>
     )
 }
 
-export interface NoteProps {
-    note: string
-    start: number
-    end?: number
-    spawner?: boolean
-    focus?: boolean
-    note_id: string
+interface VttDisplayProps {
+    vttContent: Cue[]
 }
 
-function Note(props: NoteProps) {
-    const context = React.useContext(PlayerContext)
-    
-    const ref = React.useRef<HTMLTextAreaElement>(null)
-    
-    React.useEffect(() => {
-        if (props.focus) {
-            if (ref.current) {
-                ref.current.focus()
-                ref.current.setSelectionRange(props.note.length, props.note.length)
-                context.editAnnotation({ note_id: props.note_id, note: props.note, focus: false })
-            }
-        }
-    })
-    
+const VttDisplay = (props: VttDisplayProps) => {
+    const { curTime, setSetTime, curCue } = React.useContext(PlayerContext)
+
     return (
-        <div
-        className={`note-container ${context.curAnnotation === props.note_id ? 'highlight' : ''} ${props.spawner ? ' spawner' : ''}`}
-        onMouseOver={() => context.setCurAnnotation(props.note_id)}
-        onMouseLeave={() => context.setCurAnnotation('')}
-        onBlur={() => {
-            // if empty, delete self
-            if (props.note === '') {
-                context.deleteAnnotation(props.note_id)
-            }
-        }}
-        {...props.spawner && {
-            id: 'note-spawner'
-        }}
-        >
-        <div
-        className='note-time'
-        onClick={() => {
-            context.setSetTime(props.start)
-            console.log('set time', props.start)
-        }}
-        >
-        {dispSeconds(props.start)}
-        {props.end && <span> - {dispSeconds(props.end)}</span>}
-        </div>
-        <TextareaAutosize
-        className='note-content'
-        value={props.note}
-        ref={ref}
-        onChange={
-            (props.spawner) ?
-            (e) => {
-                context.addAnnotation({ note: e.target.value, start: props.start, focus: true })
-            }
-            :
-            (e) => {
-                context.editAnnotation({ note_id: props.note_id, note: e.target.value })
-            }
-        }
-        />
+        <div className='vtt-disp'>
+        {props.vttContent.map(cue => {
+            return (
+                <div
+                    key={cue.id}
+                    id={`cue-${cue.id}`}
+                    className={`vtt-cue ${cue.id === curCue ? 'highlight' : ''}`}
+                    onClick={() => {
+                        setSetTime(cue.startTime)
+                    }}
+                >
+                <div className='vtt-start'>{dispSeconds(cue.startTime)}</div>
+                <div className='vtt-text'>{cue.text}</div>
+                </div>
+            )
+        })}
         </div>
     )
 }
+
 
 async function sendAnnotations(p_id: string, annotations: NoteProps[]) {
     const response = await fetch(`http://127.0.0.1:5000/api/annotations/${p_id}`, {
@@ -519,7 +421,7 @@ async function sendAnnotations(p_id: string, annotations: NoteProps[]) {
         return {
             start: annotation.start,
             end: annotation.end,
-            note: annotation.note
+            note: JSON.stringify(annotation.note)
         }
     }))
 });
